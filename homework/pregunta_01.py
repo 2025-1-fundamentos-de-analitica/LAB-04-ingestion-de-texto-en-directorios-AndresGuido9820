@@ -6,42 +6,62 @@ Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
 
+def pregunta_01():
+  
+
+
 import os
+import shutil
 import zipfile
 import pandas as pd
+from glob import glob
 
 
 def pregunta_01():
-    """
-    Descomprime el archivo input.zip y genera los archivos train_dataset.csv y test_dataset.csv
-    en la carpeta output, con las columnas phrase y target.
-    """
-    input_zip_path = os.path.join("files", "input.zip")
-    extract_dir = "input"
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
+    
+    # ================================ #
+    # Paso 1: Limpiar y descomprimir
+    # ================================ #
+    rutaC = "files/input.zip"
+    rutaD = "input"
 
-    # Descomprimir solo si no existe la carpeta
-    if not os.path.exists(extract_dir):
-        with zipfile.ZipFile(input_zip_path, "r") as zip_ref:
-            zip_ref.extractall(extract_dir)
+    if os.path.exists(rutaD):
+        shutil.rmtree(rutaD)
 
-    def build_dataset(split):
-        data = []
-        base_path = os.path.join(extract_dir, split)
-        for sentiment in ["positive", "negative", "neutral"]:
-            sentiment_path = os.path.join(base_path, sentiment)
-            if not os.path.exists(sentiment_path):
-                continue
-            for fname in os.listdir(sentiment_path):
-                fpath = os.path.join(sentiment_path, fname)
-                if os.path.isfile(fpath):
-                    with open(fpath, encoding="utf-8") as f:
-                        phrase = f.read().strip()
-                        data.append({"phrase": phrase, "target": sentiment})
-        return pd.DataFrame(data)
+    with zipfile.ZipFile(rutaC, "r") as zip_ref:
+        zip_ref.extractall(".")
 
-    # Generar y guardar los datasets
-    for split in ["train", "test"]:
-        df = build_dataset(split)
-        df.to_csv(os.path.join(output_dir, f"{split}_dataset.csv"), index=False)
+    # ================================ #
+    # Paso 2: Crear carpeta de salida
+    # ================================ #
+    os.makedirs("files/output", exist_ok=True)
+
+    # ================================ #
+    # Paso 3: Procesar datos
+    # ================================ #
+    def procesarDatos(tipo):
+        rutaBase = os.path.join(rutaD, tipo)
+        datos = []
+        for sentimiento in ["positive", "negative", "neutral"]:
+            carpeta = os.path.join(rutaBase, sentimiento)
+            for nombreArchivo in sorted(os.listdir(carpeta)):
+                rutaArchivo = os.path.join(carpeta, nombreArchivo)
+                with open(rutaArchivo, encoding="utf-8") as f:
+                    texto = f.read().strip()
+                    datos.append({
+                        "phrase": texto,
+                        "target": sentimiento
+                    })
+        return pd.DataFrame(datos)
+
+
+   
+    df_train = procesarDatos("train")
+    df_test = procesarDatos("test")
+
+    df_train.to_csv(os.path.join("files/output", "train_dataset.csv"), index=False)
+    df_test.to_csv(os.path.join("files/output", "test_dataset.csv"), index=False)
+
+
+if __name__ == "__main__":
+    pregunta_01()
