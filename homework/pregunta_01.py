@@ -6,9 +6,6 @@ Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
 
-def pregunta_01():
-  
-
 
 import os
 import shutil
